@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitness & Zones - Guyana VMS</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/app.js?v=1.3"></script>
+    <script src="js/app.js?v=1.4"></script>
 </head>
 
 <body>
@@ -83,15 +83,15 @@
         // Global handlers
         window.deleteFitness = function (id) {
             console.log('VMS: Deleting fitness record', id);
-            if (confirm('Delete this fitness record?')) {
-                VMS.deleteFitness(id);
-                if (typeof renderFitness === 'function') renderFitness();
-            }
+            VMS.showConfirm('Delete Inspection', `Are you sure you want to delete this Technical Inspection report?`, async () => {
+                const res = await VMS.deleteFitness(id);
+                if (res.success) renderFitness();
+            });
         };
 
         window.manageFitness = function (id) {
             console.log('VMS: Managing fitness record', id);
-            alert(`Technical Inspection Details for ID: ${id}\nComplete test history and pass/fail criteria would be here.`);
+            VMS.showModal('Technical Inspection', `You are viewing the detailed Technical Inspection Report for ID <strong>#${id}</strong>. <br><br>Pass/Fail criteria, mechanic notes, and historical inspection comparisons would be displayed here.`);
         };
 
         VMS.init().then(() => {

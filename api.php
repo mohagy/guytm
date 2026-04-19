@@ -16,6 +16,13 @@ function getData($file) {
 
 // Save data
 function saveData($file, $data) {
+    // Ensure all collections are indexed arrays for JSON
+    $data['users'] = array_values($data['users']);
+    $data['vehicles'] = array_values($data['vehicles']);
+    $data['licenses'] = array_values($data['licenses']);
+    $data['offences'] = array_values($data['offences']);
+    $data['fitness'] = array_values($data['fitness']);
+    
     file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
 }
 
@@ -29,15 +36,14 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     $rawBody = file_get_contents('php://input');
-    $input = json_decode($rawBody, true);
+    error_log("VMS API: Raw Body: " . $rawBody);
     
-    if (!$input) {
-        $input = $_POST; // Fallback for standard form data
-    }
+    $json = json_decode($rawBody, true);
+    $input = is_array($json) ? $json : $_POST;
 
     if (!isset($input['action'])) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing action']);
+        echo json_encode(['success' => false, 'message' => 'Missing action', 'received' => $input]);
         exit;
     }
 

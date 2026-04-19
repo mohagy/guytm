@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicles - Guyana VMS</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/app.js?v=1.3"></script>
+    <script src="js/app.js?v=1.4"></script>
 </head>
 
 <body>
@@ -90,20 +90,17 @@
         // Global handlers for buttons
         window.deleteVehicle = function (reg) {
             console.log('VMS: Deleting vehicle', reg);
-            if (confirm('Delete vehicle ' + reg + '? This will not remove associated records but the vehicle will no longer appear in the registry.')) {
-                VMS.deleteVehicle(reg);
-                if (typeof renderVehicles === 'function') renderVehicles();
-            }
+            VMS.showConfirm('Confirm Deletion', `Are you sure you want to delete vehicle <strong>${reg}</strong>?`, async () => {
+                const res = await VMS.deleteVehicle(reg);
+                if (res.success) {
+                    renderVehicles();
+                }
+            });
         };
 
         window.manageVehicle = function (reg) {
             console.log('VMS: Managing vehicle', reg);
-            const data = VMS.getVehicleDataByReg(reg);
-            if (!data) {
-                alert('Vehicle data not found.');
-                return;
-            }
-            alert(`Managing Vehicle: ${reg}\nMake: ${data.vehicle.make}\nModel: ${data.vehicle.model}\nOwner: ${data.vehicle.owner_id}`);
+            VMS.showManageVehicle(reg);
         };
 
         VMS.init().then(() => {

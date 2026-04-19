@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Licensing - Guyana VMS</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/app.js?v=1.3"></script>
+    <script src="js/app.js?v=1.4"></script>
 </head>
 
 <body>
@@ -90,15 +90,15 @@
         // Global handlers
         window.deleteLicense = function (id) {
             console.log('VMS: Deleting license', id);
-            if (confirm('Permanently revoke and delete this license record?')) {
-                VMS.deleteLicense(id);
-                if (typeof renderLicenses === 'function') renderLicenses();
-            }
+            VMS.showConfirm('Revoke License', `Are you sure you want to permanently revoke and delete license record <strong>#${id}</strong>?`, async () => {
+                const res = await VMS.deleteLicense(id);
+                if (res.success) renderLicenses();
+            });
         };
 
         window.manageLicense = function (id) {
             console.log('VMS: Managing license', id);
-            alert(`Managing License ID: ${id}\nFull physical inspection and renewal tools would open here.`);
+            VMS.showModal('License Management', `You are viewing details for License ID <strong>#${id}</strong>. <br><br>Full physical inspection tools and digital certificate renewal options would appear in this specialized control panel.`);
         };
 
         VMS.init().then(() => {

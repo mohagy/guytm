@@ -132,6 +132,83 @@ const VMS = {
         if (sidebar) sidebar.classList.toggle('active');
     },
 
+    // Premium UI Modals
+    _injectModalContainer() {
+        if (document.getElementById('vms-modal')) return;
+        const modalHtml = `
+            <div id="vms-modal" class="modal-overlay" onclick="if(event.target===this) VMS.hideModal()">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modal-title">Notification</h3>
+                        <button class="modal-close" onclick="VMS.hideModal()">×</button>
+                    </div>
+                    <div id="modal-body" class="modal-body"></div>
+                    <div id="modal-footer" class="modal-footer"></div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    },
+
+    showModal(title, body, buttons = []) {
+        this._injectModalContainer();
+        const modal = document.getElementById('vms-modal');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = body;
+
+        const footer = document.getElementById('modal-footer');
+        footer.innerHTML = '';
+
+        if (buttons.length === 0) {
+            buttons.push({ text: 'Close', class: 'btn-secondary', onclick: () => this.hideModal() });
+        }
+
+        buttons.forEach(btn => {
+            const b = document.createElement('button');
+            b.innerText = btn.text;
+            b.className = btn.class || '';
+            b.onclick = () => {
+                if (btn.onclick) btn.onclick();
+                if (!btn.preventClose) this.hideModal();
+            };
+            footer.appendChild(b);
+        });
+
+        modal.classList.add('active');
+    },
+
+    hideModal() {
+        const modal = document.getElementById('vms-modal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    showConfirm(title, message, onConfirm) {
+        this.showModal(title, message, [
+            { text: 'Cancel', class: 'btn-secondary', onclick: () => this.hideModal() },
+            { text: 'Delete', class: 'btn-danger', onclick: onConfirm }
+        ]);
+    },
+
+    showManageVehicle(reg) {
+        const data = this.getVehicleDataByReg(reg);
+        if (!data) return;
+
+        const body = `
+            <div style="text-align:left">
+                <p><strong>Registration:</strong> ${data.vehicle.reg_number}</p>
+                <p><strong>Make/Model:</strong> ${data.vehicle.make} ${data.vehicle.model} (${data.vehicle.year})</p>
+                <p><strong>Category:</strong> ${data.vehicle.category}</p>
+                <p><strong>Owner ID:</strong> ${data.vehicle.owner_id}</p>
+                <p><strong>Reg Date:</strong> ${data.vehicle.reg_date}</p>
+                ${data.vehicle.business_license_no ? `<p><strong>Business License:</strong> ${data.vehicle.business_license_no}</p>` : ''}
+                <hr style="margin:1rem 0; opacity:0.1">
+                <p><strong>Recent Offences:</strong> ${data.offences.length}</p>
+                <p><strong>License Status:</strong> ${data.licenses.length > 0 ? data.licenses[0].status : 'N/A'}</p>
+            </div>
+        `;
+        this.showModal('Manage Vehicle', body);
+    },
+
     getCurrentUser() {
         return JSON.parse(sessionStorage.getItem('vms_current_user'));
     },
@@ -145,7 +222,9 @@ const VMS = {
     isAdmin() {
         const user = this.getCurrentUser();
         if (!user) return false;
-        return (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin');
+        const role = String(user.role || '').toLowerCase();
+        const username = String(user.username || '').toLowerCase();
+        return role === 'admin' || username === 'admin';
     },
 
     // CRUD Methods

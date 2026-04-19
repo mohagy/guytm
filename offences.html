@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offences - Guyana VMS</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/app.js?v=1.3"></script>
+    <script src="js/app.js?v=1.4"></script>
 </head>
 
 <body>
@@ -81,15 +81,15 @@
         // Global handlers
         window.deleteOffence = function (id) {
             console.log('VMS: Deleting offence', id);
-            if (confirm('Delete this offence record?')) {
-                VMS.deleteOffence(id);
-                if (typeof renderOffences === 'function') renderOffences();
-            }
+            VMS.showConfirm('Delete Record', `Are you sure you want to delete this traffic offence record? This action cannot be undone.`, async () => {
+                const res = await VMS.deleteOffence(id);
+                if (res.success) renderOffences();
+            });
         };
 
         window.manageOffence = function (id) {
             console.log('VMS: Managing offence', id);
-            alert(`Viewing details for Offence #${id}\nPayment processing and court appearance tools would be here.`);
+            VMS.showModal('Offence Details', `You are viewing details for Offence Record <strong>#${id}</strong>. <br><br>Payment processing, court appearance scheduling, and officer statement logs would be managed here.`);
         };
 
         VMS.init().then(() => {

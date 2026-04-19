@@ -87,6 +87,25 @@
     </div>
 
     <script>
+        // Global handlers for buttons
+        window.deleteVehicle = function (reg) {
+            console.log('VMS: Deleting vehicle', reg);
+            if (confirm('Delete vehicle ' + reg + '? This will not remove associated records but the vehicle will no longer appear in the registry.')) {
+                VMS.deleteVehicle(reg);
+                if (typeof renderVehicles === 'function') renderVehicles();
+            }
+        };
+
+        window.manageVehicle = function (reg) {
+            console.log('VMS: Managing vehicle', reg);
+            const data = VMS.getVehicleDataByReg(reg);
+            if (!data) {
+                alert('Vehicle data not found.');
+                return;
+            }
+            alert(`Managing Vehicle: ${reg}\nMake: ${data.vehicle.make}\nModel: ${data.vehicle.model}\nOwner: ${data.vehicle.owner_id}`);
+        };
+
         VMS.init().then(() => {
             VMS.requireLogin();
             VMS.injectSidebar();
@@ -96,19 +115,7 @@
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
             }
 
-            window.deleteVehicle = function (reg) {
-                if (confirm('Delete vehicle ' + reg + '? This will not remove associated records but the vehicle will no longer appear in the registry.')) {
-                    VMS.deleteVehicle(reg);
-                    renderVehicles();
-                }
-            };
-
-            window.manageVehicle = function (reg) {
-                const data = VMS.getVehicleDataByReg(reg);
-                alert(`Managing Vehicle: ${reg}\nMake: ${data.vehicle.make}\nModel: ${data.vehicle.model}\nOwner: ${data.vehicle.owner_id}`);
-            };
-
-            function renderVehicles() {
+            window.renderVehicles = function () {
                 const vehicles = VMS.getVehicles();
                 const tbody = document.getElementById('vehicle-table-body');
 
@@ -130,13 +137,13 @@
                         </td>
                     </tr>
                 `).join('');
-            }
+            };
 
             window.toggleBizLicense = function () {
                 const cat = document.getElementById('category').value;
                 const group = document.getElementById('biz-license-group');
                 group.style.display = (cat !== 'Private' && cat !== 'Tractor') ? 'block' : 'none';
-            }
+            };
 
             document.getElementById('vehicle-form').addEventListener('submit', (e) => {
                 e.preventDefault();

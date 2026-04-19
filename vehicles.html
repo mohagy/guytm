@@ -125,16 +125,6 @@
                     </tr>
                 `).join('');
             }
-                        <td>${v.make} ${v.model}</td>
-                        <td>${v.owner_id}</td>
-                        <td>${v.business_license_no || 'N/A'}</td>
-                        <td>
-                            <button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
-                            ${VMS.isAdmin() ? `<button onclick="deleteVehicle('${v.reg_number}')" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
-                        </td>
-                    </tr >
-                `).join('');
-        }
 
             window.toggleBizLicense = function () {
                 const cat = document.getElementById('category').value;
@@ -159,7 +149,7 @@
                 alert('Vehicle registered successfully!');
             });
 
-        renderVehicles();
+            renderVehicles();
         });
     </script>
 </body>

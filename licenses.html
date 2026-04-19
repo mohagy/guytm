@@ -87,6 +87,20 @@
     </div>
 
     <script>
+        // Global handlers
+        window.deleteLicense = function (id) {
+            console.log('VMS: Deleting license', id);
+            if (confirm('Permanently revoke and delete this license record?')) {
+                VMS.deleteLicense(id);
+                if (typeof renderLicenses === 'function') renderLicenses();
+            }
+        };
+
+        window.manageLicense = function (id) {
+            console.log('VMS: Managing license', id);
+            alert(`Managing License ID: ${id}\nFull physical inspection and renewal tools would open here.`);
+        };
+
         VMS.init().then(() => {
             VMS.requireLogin();
             VMS.injectSidebar();
@@ -96,18 +110,7 @@
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
             }
 
-            window.deleteLicense = function (id) {
-                if (confirm('Permanently revoke and delete this license record?')) {
-                    VMS.deleteLicense(id);
-                    renderLicenses();
-                }
-            };
-
-            window.manageLicense = function (id) {
-                alert(`Managing License ID: ${id}\nFull physical inspection and renewal tools would open here.`);
-            };
-
-            function renderLicenses() {
+            window.renderLicenses = function () {
                 const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
                 const tbody = document.getElementById('license-table-body');
 

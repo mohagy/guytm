@@ -78,6 +78,20 @@
     </div>
 
     <script>
+        // Global handlers
+        window.deleteOffence = function (id) {
+            console.log('VMS: Deleting offence', id);
+            if (confirm('Delete this offence record?')) {
+                VMS.deleteOffence(id);
+                if (typeof renderOffences === 'function') renderOffences();
+            }
+        };
+
+        window.manageOffence = function (id) {
+            console.log('VMS: Managing offence', id);
+            alert(`Viewing details for Offence #${id}\nPayment processing and court appearance tools would be here.`);
+        };
+
         VMS.init().then(() => {
             VMS.requireLogin();
             VMS.injectSidebar();
@@ -87,19 +101,8 @@
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
             }
 
-            window.deleteOffence = function (id) {
-                if (confirm('Delete this offence record?')) {
-                    VMS.deleteOffence(id);
-                    renderOffences();
-                }
-            };
 
-            window.manageOffence = function (id) {
-                alert(`Viewing details for Offence #${id}\nPayment processing and court appearance tools would be here.`);
-            };
-
-
-            function renderOffences() {
+            window.renderOffences = function () {
                 const offences = JSON.parse(localStorage.getItem('vms_offences'));
                 const tbody = document.getElementById('offence-table-body');
 

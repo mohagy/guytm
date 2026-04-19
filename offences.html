@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offences - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1>Traffic Offence Tracking</h1>
+            <button onclick="document.getElementById('off-modal').style.display='block'">+ Report Offence</button>
+        </header>
+
+        <div class="card">
+            <h3>Recent Traffic Violations</h3>
+            <div style="margin-top: 1rem; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Section #</th>
+                            <th>Description</th>
+                            <th>Fine (GYD)</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="offence-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offence Modal -->
+    <div id="off-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+        <div class="card" style="max-width: 500px; margin: 5% auto; position: relative;">
+            <button onclick="document.getElementById('off-modal').style.display='none'"
+                style="position:absolute; right:1rem; top:1rem; background:none; color:var(--text); font-size:1.5rem;">&times;</button>
+            <h3>Report New Offence</h3>
+            <form id="offence-form" style="margin-top:1.5rem;">
+                <div class="form-group">
+                    <label>Vehicle Reg Number</label>
+                    <input type="text" id="off_reg" required>
+                </div>
+                <div class="form-group">
+                    <label>Act Section #</label>
+                    <select id="section_no">
+                        <option value="Section 35">Section 35: Speeding</option>
+                        <option value="Section 37">Section 37: Reckless Driving</option>
+                        <option value="Section 38">Section 38: Careless Driving</option>
+                        <option value="Section 40">Section 40: Influence of Drink/Drugs</option>
+                        <option value="Section 24">Section 24: Unlicensed Driving</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fine Amount (GYD)</label>
+                    <input type="number" id="fine" required>
+                </div>
+                <div class="form-group">
+                    <label>Description / Location</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
+                <button type="submit" style="width:100%;">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderOffences() {
+                const offences = JSON.parse(localStorage.getItem('vms_offences'));
+                const tbody = document.getElementById('offence-table-body');
+
+                if (offences.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No offences recorded. High efficiency!</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = offences.map(o => `
+                    <tr>
+                        <td><strong>${o.reg}</strong></td>
+                        <td>${o.section}</td>
+                        <td>${o.desc}</td>
+                        <td>$${o.fine.toLocaleString()}</td>
+                        <td>${o.date}</td>
+                        <td><span class="badge badge-expired">${o.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('offence-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const offences = JSON.parse(localStorage.getItem('vms_offences'));
+                offences.push({
+                    reg: document.getElementById('off_reg').value,
+                    section: document.getElementById('section_no').value,
+                    desc: document.getElementById('description').value,
+                    fine: parseFloat(document.getElementById('fine').value),
+                    date: new Date().toLocaleString(),
+                    status: 'Unpaid'
+                });
+                localStorage.setItem('vms_offences', JSON.stringify(offences));
+                document.getElementById('off-modal').style.display = 'none';
+                renderOffences();
+                alert('Offence recorded.');
+            });
+
+            renderOffences();
+        });
+    </script>
+</body>
+
+</html>

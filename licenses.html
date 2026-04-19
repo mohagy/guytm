@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licensing - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1>Licensing Management</h1>
+            <button onclick="document.getElementById('lic-modal').style.display='block'">+ Issue New License</button>
+        </header>
+
+        <div class="card">
+            <h3>License Registry</h3>
+            <div style="margin-top: 1rem; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License #</th>
+                            <th>Type</th>
+                            <th>User (Owner/Driver)</th>
+                            <th>Zone</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="license-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Modal -->
+    <div id="lic-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+        <div class="card" style="max-width: 500px; margin: 5% auto; position: relative;">
+            <button onclick="document.getElementById('lic-modal').style.display='none'"
+                style="position:absolute; right:1rem; top:1rem; background:none; color:var(--text); font-size:1.5rem;">&times;</button>
+            <h3>Issue License</h3>
+            <form id="license-form" style="margin-top:1.5rem;">
+                <div class="form-group">
+                    <label>License Number</label>
+                    <input type="text" id="license_no" required placeholder="e.g. DL-2026-102">
+                </div>
+                <div class="form-group">
+                    <label>License Type</label>
+                    <select id="type" required>
+                        <option value="Driver">Driver's License</option>
+                        <option value="Conductor">Conductor's License</option>
+                        <option value="Road Service">Road Service (Bus)</option>
+                        <option value="Special Hire">Special Hire (Taxi)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Operating Zone</label>
+                    <select id="zone">
+                        <option value="">N/A (Private)</option>
+                        <option value="Georgetown">Georgetown</option>
+                        <option value="New Amsterdam">New Amsterdam</option>
+                        <option value="Demerara">Demerara</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Associated Username</label>
+                    <input type="text" id="lic_username" required>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" id="expiry" required>
+                </div>
+                <button type="submit" style="width:100%;">Issue License</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderLicenses() {
+                const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
+                const tbody = document.getElementById('license-table-body');
+
+                if (licenses.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No licenses found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = licenses.map(l => `
+                    <tr>
+                        <td><strong>${l.license_no}</strong></td>
+                        <td>${l.type}</td>
+                        <td>${l.user_id}</td>
+                        <td>${l.zone || 'Global'}</td>
+                        <td>${l.expiry_date}</td>
+                        <td><span class="badge badge-active">${l.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('license-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newLic = {
+                    license_no: document.getElementById('license_no').value,
+                    type: document.getElementById('type').value,
+                    user_id: document.getElementById('lic_username').value,
+                    zone: document.getElementById('zone').value,
+                    expiry_date: document.getElementById('expiry').value,
+                    issue_date: new Date().toISOString().split('T')[0]
+                };
+
+                VMS.applyLicense(newLic);
+                document.getElementById('lic-modal').style.display = 'none';
+                renderLicenses();
+                alert('License issued!');
+            });
+
+            renderLicenses();
+        });
+    </script>
+</body>
+
+</html>

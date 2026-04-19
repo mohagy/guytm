@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness & Zones - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <h1>Administrative Configuration</h1>
+
+        <div class="card" style="margin-top:2rem;">
+            <h3>Certificates of Fitness (Inspections)</h3>
+            <div style="margin-top: 1rem; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Issue Date</th>
+                            <th>Expiry Date</th>
+                            <th>Result</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fitness-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <button onclick="document.getElementById('fit-modal').style.display='block'" style="margin-top:1rem;">+
+                Record New Inspection</button>
+        </div>
+
+        <div class="card">
+            <h3>Operating Zones</h3>
+            <ul id="zone-list" style="list-style:none; margin-top:1rem;">
+                <!-- Populated via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Fitness Modal -->
+    <div id="fit-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+        <div class="card" style="max-width: 500px; margin: 5% auto; position: relative;">
+            <button onclick="document.getElementById('fit-modal').style.display='none'"
+                style="position:absolute; right:1rem; top:1rem; background:none; color:var(--text); font-size:1.5rem;">&times;</button>
+            <h3>Technical Inspection Report</h3>
+            <form id="fitness-form" style="margin-top:1.5rem;">
+                <div class="form-group">
+                    <label>Vehicle Reg Number</label>
+                    <input type="text" id="fit_reg" required>
+                </div>
+                <div class="form-group">
+                    <label>Inspection Result</label>
+                    <select id="fit_result">
+                        <option value="Pass">Pass - Fit for Road</option>
+                        <option value="Fail">Fail - Defects Found</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Comments / Noted Defects</label>
+                    <textarea id="fit_comments" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Date (Next Inspection)</label>
+                    <input type="date" id="fit_expiry" required>
+                </div>
+                <button type="submit" style="width:100%;">Save Certificate</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderFitness() {
+                const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+                const tbody = document.getElementById('fitness-table-body');
+                tbody.innerHTML = certs.map(c => `
+                    <tr>
+                        <td><strong>${c.reg}</strong></td>
+                        <td>${c.issue}</td>
+                        <td>${c.expiry}</td>
+                        <td><span class="badge ${c.result === 'Pass' ? 'badge-active' : 'badge-expired'}">${c.result}</span></td>
+                        <td>${c.comments}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="5" style="text-align:center;">No inspection records active.</td></tr>';
+            }
+
+            function renderZones() {
+                const zones = JSON.parse(localStorage.getItem('vms_zones'));
+                const list = document.getElementById('zone-list');
+                list.innerHTML = zones.map(z => `
+                    <li style="padding:0.75rem; border-bottom:1px solid #f0f4f8; display:flex; justify-content:space-between; align-items:center;">
+                        ${z} <span class="badge badge-active">Active Region</span>
+                    </li>
+                `).join('');
+            }
+
+            document.getElementById('fitness-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+                certs.push({
+                    reg: document.getElementById('fit_reg').value,
+                    result: document.getElementById('fit_result').value,
+                    comments: document.getElementById('fit_comments').value,
+                    expiry: document.getElementById('fit_expiry').value,
+                    issue: new Date().toISOString().split('T')[0]
+                });
+                localStorage.setItem('vms_fitness', JSON.stringify(certs));
+                document.getElementById('fit-modal').style.display = 'none';
+                renderFitness();
+                alert('Fitness record updated.');
+            });
+
+            renderFitness();
+            renderZones();
+        });
+    </script>
+</body>
+
+</html>

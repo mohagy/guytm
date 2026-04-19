@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicles - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1>Vehicle Management</h1>
+            <button onclick="document.getElementById('reg-modal').style.display='block'">+ Register Vehicle</button>
+        </header>
+
+        <div class="card">
+            <h3>Registered Vehicles (All Divisions)</h3>
+            <div style="margin-top: 1rem; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Reg Number</th>
+                            <th>Category</th>
+                            <th>Make/Model</th>
+                            <th>Owner</th>
+                            <th>Business License</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehicle-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="reg-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+        <div class="card" style="max-width: 500px; margin: 5% auto; position: relative;">
+            <button onclick="document.getElementById('reg-modal').style.display='none'"
+                style="position:absolute; right:1rem; top:1rem; background:none; color:var(--text); font-size:1.5rem;">&times;</button>
+            <h3>Register New Vehicle</h3>
+            <form id="vehicle-form" style="margin-top:1.5rem;">
+                <div class="form-group">
+                    <label>Registration Number</label>
+                    <input type="text" id="reg_number" required placeholder="e.g. PAB 1234">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category" required onchange="toggleBizLicense()">
+                        <option value="Private">Private</option>
+                        <option value="Hire Car">Hire Car (Taxi)</option>
+                        <option value="Motor Bus">Motor Bus</option>
+                        <option value="Lorry">Lorry / Goods</option>
+                        <option value="Tractor">Tractor</option>
+                    </select>
+                </div>
+                <div class="form-group" id="biz-license-group" style="display:none;">
+                    <label>Business License Attachment #</label>
+                    <input type="text" id="biz_license" placeholder="Required for commercial vehicles">
+                </div>
+                <div class="form-group" style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label>Make</label>
+                        <input type="text" id="make" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Model</label>
+                        <input type="text" id="model" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Owner (Username)</label>
+                    <input type="text" id="owner_username" required placeholder="Enter owner's system username">
+                </div>
+                <button type="submit" style="width:100%;">Complete Registration</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderVehicles() {
+                const vehicles = VMS.getVehicles();
+                const tbody = document.getElementById('vehicle-table-body');
+
+                if (vehicles.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No vehicles registered yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = vehicles.map(v => `
+                    <tr>
+                        <td><strong>${v.reg_number}</strong></td>
+                        <td>${v.category}</td>
+                        <td>${v.make} ${v.model}</td>
+                        <td>${v.owner_id}</td>
+                        <td>${v.business_license_no || 'N/A'}</td>
+                        <td><button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button></td>
+                    </tr>
+                `).join('');
+            }
+
+            window.toggleBizLicense = function () {
+                const cat = document.getElementById('category').value;
+                const group = document.getElementById('biz-license-group');
+                group.style.display = (cat !== 'Private' && cat !== 'Tractor') ? 'block' : 'none';
+            }
+
+            document.getElementById('vehicle-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newVehicle = {
+                    reg_number: document.getElementById('reg_number').value,
+                    category: document.getElementById('category').value,
+                    make: document.getElementById('make').value,
+                    model: document.getElementById('model').value,
+                    owner_id: document.getElementById('owner_username').value,
+                    business_license_no: document.getElementById('biz_license').value
+                };
+
+                VMS.addVehicle(newVehicle);
+                document.getElementById('reg-modal').style.display = 'none';
+                renderVehicles();
+                alert('Vehicle registered successfully!');
+            });
+
+            renderVehicles();
+        });
+    </script>
+</body>
+
+</html>

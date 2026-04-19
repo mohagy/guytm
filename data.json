@@ -1,0 +1,22 @@
+{
+    "users": [
+        { "id": 1, "username": "admin", "password": "123", "role": "Admin", "full_name": "Chief Administrator", "email": "admin@vms.gov.gy" },
+        { "id": 2, "username": "officer1", "password": "123", "role": "Licensing Officer", "full_name": "Sergeant Persaud", "email": "persaud@vms.gov.gy" },
+        { "id": 3, "username": "owner", "password": "123", "role": "Vehicle Owner", "full_name": "Kishore Singh", "email": "ksingh@gmail.com" }
+    ],
+    "zones": ["Georgetown", "New Amsterdam", "Linden", "Anna Regina", "Rose Hall", "Bartica", "Mahdia"],
+    "vehicles": [
+        { "id": 101, "owner_id": "owner", "reg_number": "HB 1234", "category": "Hire Car", "make": "Toyota", "model": "Premio", "year": 2018, "business_license_no": "TX-2025-001", "reg_date": "2024-01-15" },
+        { "id": 102, "owner_id": "owner", "reg_number": "PAB 5678", "category": "Private", "make": "Honda", "model": "Civic", "year": 2020, "business_license_no": "", "reg_date": "2024-03-22" }
+    ],
+    "licenses": [
+        { "id": 201, "user_id": "owner", "license_no": "DL-GUY-9988", "type": "Driver", "issue_date": "2024-01-01", "expiry_date": "2027-01-01", "status": "Active", "zone": "" },
+        { "id": 202, "user_id": "owner", "license_no": "RSL-GT-443", "type": "Road Service", "issue_date": "2024-06-01", "expiry_date": "2025-06-01", "status": "Active", "zone": "Georgetown" }
+    ],
+    "offences": [
+        { "reg": "HB 1234", "section": "Section 35", "desc": "Speeding on Main Street", "fine": 15000, "date": "2025-02-10, 10:30 AM", "status": "Paid" }
+    ],
+    "fitness": [
+        { "reg": "HB 1234", "result": "Pass", "comments": "Brakes and lights verified.", "expiry": "2026-12-31", "issue": "2025-12-31" }
+    ]
+}

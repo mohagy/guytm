@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar">
+        <!-- Injected via JS -->
+    </div>
+    <div class="main-content">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <h1 id="welcome-message">Dashboard</h1>
+            <div id="role-badge" class="badge badge-active">Loading...</div>
+        </header>
+
+        <div class="card">
+            <h3>Quick Information</h3>
+            <p id="stats-summary" style="margin-top: 1rem; color: #627d98;">
+                Analyzing your current records...
+            </p>
+        </div>
+
+        <div class="grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <div class="card">
+                <h4>Vehicles Registered</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);" id="vehicle-count">0</div>
+            </div>
+            <div class="card">
+                <h4>Active Licenses</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--success);" id="license-count">0</div>
+            </div>
+            <div class="card">
+                <h4>Pending Offences</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--danger);" id="offence-count">0</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3>Recent Activity</h3>
+            <table id="activity-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-body">
+                    <tr>
+                        <td colspan="3" style="text-align: center;">No recent activity found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            // Check if logged in
+            VMS.requireLogin();
+            const user = VMS.getCurrentUser();
+
+            // Populate UI
+            document.getElementById('welcome-message').textContent = `Welcome, ${user.full_name}`;
+            document.getElementById('role-badge').textContent = user.role;
+
+            const vehicles = VMS.getVehicles();
+            document.getElementById('vehicle-count').textContent = vehicles.length;
+
+            const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
+            document.getElementById('license-count').textContent = licenses.filter(l => l.status === 'Active').length;
+
+            const offences = JSON.parse(localStorage.getItem('vms_offences'));
+            document.getElementById('offence-count').textContent = offences.filter(o => o.status === 'Unpaid').length;
+
+            // Inject sidebar
+            VMS.injectSidebar();
+        });
+    </script>
+</body>
+
+</html>

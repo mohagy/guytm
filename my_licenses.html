@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Licenses - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <h1>My Licenses</h1>
+        <p style="margin-bottom: 2rem; color: #627d98;">Manage and renew your driving and road service licenses.</p>
+
+        <div class="card">
+            <h3>Active & Pending Licenses</h3>
+            <div style="margin-top: 1rem; overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License No</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Expiry</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="my-license-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--primary);">
+            <h3>Apply for New License</h3>
+            <p style="margin-bottom: 1rem; font-size:0.9rem;">Submit an application for a Driver, Conductor, or Road
+                Service license.</p>
+            <button onclick="alert('Redirecting to application form... (Demo Only)')">Start Application</button>
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderMyLicenses() {
+                const user = VMS.getCurrentUser();
+                const allLicenses = JSON.parse(localStorage.getItem('vms_licenses')) || [];
+                const tbody = document.getElementById('my-license-table-body');
+
+                const myLicenses = allLicenses.filter(l => l.user_id === user.username);
+
+                if (myLicenses.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No licenses found under your name.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = myLicenses.map(l => `
+                    <tr>
+                        <td><strong>${l.license_no}</strong></td>
+                        <td>${l.type}</td>
+                        <td><span class="badge ${l.status === 'Active' ? 'badge-active' : 'badge-pending'}">${l.status}</span></td>
+                        <td>${l.expiry_date}</td>
+                        <td><button style="padding:0.4rem 0.8rem; font-size:0.8rem;">Renew</button></td>
+                    </tr>
+                `).join('');
+            }
+
+            renderMyLicenses();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Vehicles - Guyana VMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js?v=1.1"></script>
+</head>
+
+<body>
+    <div class="sidebar"></div>
+    <div class="main-content">
+        <h1>My Registered Vehicles</h1>
+        <p style="margin-bottom: 2rem; color: #627d98;">Overview of vehicles registered under your name.</p>
+
+        <div id="vehicle-list-container" class="grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <script>
+        VMS.init().then(() => {
+            VMS.requireLogin();
+            VMS.injectSidebar();
+
+            function renderMyVehicles() {
+                const user = VMS.getCurrentUser();
+                const allVehicles = VMS.getVehicles();
+                const container = document.getElementById('vehicle-list-container');
+
+                // In a real app, we filter by owner ID. Here we use username for simplicity.
+                const myVehicles = allVehicles.filter(v => v.owner_id === user.username);
+
+                if (myVehicles.length === 0) {
+                    container.innerHTML = '<div class="card"><h4>No vehicles found.</h4><p>Contact a Licensing Officer to register a vehicle.</p></div>';
+                    return;
+                }
+
+                container.innerHTML = myVehicles.map(v => `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <span class="badge badge-active">${v.category}</span>
+                                <h2 style="margin-top:0.5rem; color:var(--primary);">${v.reg_number}</h2>
+                            </div>
+                            <img src="https://via.placeholder.com/60?text=VMS" style="border-radius:0.5rem;">
+                        </div>
+                        <div style="margin-top:1.5rem; font-size:0.9rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                <span style="color:#627d98;">Make/Model:</span>
+                                <strong>${v.make} ${v.model}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                <span style="color:#627d98;">Business Lic:</span>
+                                <strong>${v.business_license_no || 'None'}</strong>
+                            </div>
+                             <div style="display:flex; justify-content:space-between;">
+                                <span style="color:#627d98;">Reg Date:</span>
+                                <strong>${v.reg_date || 'N/A'}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderMyVehicles();
+        });
+    </script>
+</body>
+
+</html>

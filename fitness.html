@@ -25,7 +25,7 @@
                             <th>Expiry Date</th>
                             <th>Result</th>
                             <th>Comments</th>
-                            ${VMS.isAdmin() ? '<th>Actions</th>' : ''}
+                            <th class="admin-only" style="display:none;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="fitness-table-body">
@@ -86,6 +86,22 @@
 
             if (VMS.isAdmin()) {
                 document.getElementById('admin-actions-fit').style.display = 'block';
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            }
+
+            window.deleteFitness = function (id) {
+                if (confirm('Delete this fitness record?')) {
+                    VMS.deleteFitness(id);
+                    renderFitness();
+                }
+            };
+
+            window.manageFitness = function (id) {
+                alert(`Technical Inspection Details for ID: ${id}\nComplete test history and pass/fail criteria would be here.`);
+            };
+
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions-fit').style.display = 'block';
             }
 
             window.deleteFitness = function (id) {
@@ -105,7 +121,10 @@
                         <td>${c.expiry}</td>
                         <td><span class="badge ${c.result === 'Pass' ? 'badge-active' : 'badge-expired'}">${c.result}</span></td>
                         <td>${c.comments}</td>
-                        ${VMS.isAdmin() ? `<td><button onclick="deleteFitness(${c.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : ''}
+                        <td>
+                            <button onclick="manageFitness(${c.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
+                            ${VMS.isAdmin() ? `<button onclick="deleteFitness(${c.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
+                        </td>
                     </tr>
                 `).join('') || '<tr><td colspan="' + (VMS.isAdmin() ? 6 : 5) + '" style="text-align:center;">No inspection records active.</td></tr>';
             }

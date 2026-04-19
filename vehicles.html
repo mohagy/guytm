@@ -30,7 +30,7 @@
                             <th>Make/Model</th>
                             <th>Owner</th>
                             <th>Business License</th>
-                            <th>Actions</th>
+                            <th class="admin-only" style="display:none;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="vehicle-table-body">
@@ -93,6 +93,7 @@
 
             if (VMS.isAdmin()) {
                 document.getElementById('admin-actions').style.display = 'block';
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
             }
 
             window.deleteVehicle = function (reg) {
@@ -100,6 +101,11 @@
                     VMS.deleteVehicle(reg);
                     renderVehicles();
                 }
+            };
+
+            window.manageVehicle = function (reg) {
+                const data = VMS.getVehicleDataByReg(reg);
+                alert(`Managing Vehicle: ${reg}\nMake: ${data.vehicle.make}\nModel: ${data.vehicle.model}\nOwner: ${data.vehicle.owner_id}`);
             };
 
             function renderVehicles() {
@@ -119,7 +125,7 @@
                         <td>${v.owner_id}</td>
                         <td>${v.business_license_no || 'N/A'}</td>
                         <td>
-                            <button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
+                            <button onclick="manageVehicle('${v.reg_number}')" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
                             ${VMS.isAdmin() ? `<button onclick="deleteVehicle('${v.reg_number}')" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
                         </td>
                     </tr>

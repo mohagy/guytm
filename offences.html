@@ -31,7 +31,7 @@
                             <th>Fine (GYD)</th>
                             <th>Date</th>
                             <th>Status</th>
-                            ${VMS.isAdmin() ? '<th>Actions</th>' : ''}
+                            <th class="admin-only" style="display:none;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="offence-table-body">
@@ -84,6 +84,22 @@
 
             if (VMS.isAdmin()) {
                 document.getElementById('admin-actions').style.display = 'block';
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+            }
+
+            window.deleteOffence = function (id) {
+                if (confirm('Delete this offence record?')) {
+                    VMS.deleteOffence(id);
+                    renderOffences();
+                }
+            };
+
+            window.manageOffence = function (id) {
+                alert(`Viewing details for Offence #${id}\nPayment processing and court appearance tools would be here.`);
+            };
+
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions').style.display = 'block';
             }
 
             window.deleteOffence = function (id) {
@@ -110,7 +126,10 @@
                         <td>$${o.fine.toLocaleString()}</td>
                         <td>${o.date}</td>
                         <td><span class="badge badge-expired">${o.status}</span></td>
-                        ${VMS.isAdmin() ? `<td><button onclick="deleteOffence(${o.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : ''}
+                        <td>
+                            <button onclick="manageOffence(${o.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
+                            ${VMS.isAdmin() ? `<button onclick="deleteOffence(${o.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
+                        </td>
                     </tr>
                 `).join('');
             }

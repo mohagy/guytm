@@ -20,13 +20,15 @@ const VMS = {
             }
 
             // Priority 2: Fallback to localStorage if no server data
-            if (!localStorage.getItem('vms_initialized')) {
-                console.log('Starting VMS Initialization from data.json...');
+            const currentVersion = '1.6';
+            if (localStorage.getItem('vms_version') !== currentVersion) {
+                console.log('Starting VMS Initialization and Sync from data.json...');
                 try {
-                    const response = await fetch('./data.json');
+                    const response = await fetch(`./data.json?v=${currentVersion}`);
+                    if (!response.ok) throw new Error('data.json fetch failed');
                     const data = await response.json();
                     this._persistToLocal(data);
-                    localStorage.setItem('vms_initialized', 'true');
+                    localStorage.setItem('vms_version', currentVersion);
                 } catch (err) {
                     console.error('Data loading failed:', err.message);
                 }
@@ -34,6 +36,18 @@ const VMS = {
         })();
 
         return this._initPromise;
+    },
+
+    resetData() {
+        console.log('VMS: Wiping local cache to force server sync...');
+        localStorage.removeItem('vms_version');
+        localStorage.removeItem('vms_users');
+        localStorage.removeItem('vms_vehicles');
+        localStorage.removeItem('vms_licenses');
+        localStorage.removeItem('vms_offences');
+        localStorage.removeItem('vms_fitness');
+        localStorage.removeItem('vms_zones');
+        sessionStorage.removeItem('vms_current_user');
     },
 
     _persistToLocal(data) {

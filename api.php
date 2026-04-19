@@ -69,6 +69,18 @@ if ($method === 'POST') {
             $success = true;
             break;
 
+        case 'edit_vehicle':
+            $editedVehicle = $input['data'];
+            foreach ($data['vehicles'] as &$v) {
+                if ($v['reg_number'] === $editedVehicle['reg_number']) {
+                    $v = array_merge($v, $editedVehicle);
+                    $success = true;
+                    break;
+                }
+            }
+            break;
+
+
         case 'add_license':
             $newLicense = $input['data'];
             $newLicense['id'] = time();

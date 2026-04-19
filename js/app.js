@@ -108,6 +108,13 @@ const VMS = {
                 const filteredF = fitness.filter(f => f.id !== params.id);
                 localStorage.setItem('vms_fitness', JSON.stringify(filteredF));
                 break;
+            case 'edit_vehicle':
+                const index = vehicles.findIndex(v => v.reg_number === params.data.reg_number);
+                if (index !== -1) {
+                    vehicles[index] = { ...vehicles[index], ...params.data };
+                    localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
+                }
+                break;
         }
     },
 
@@ -189,24 +196,79 @@ const VMS = {
         ]);
     },
 
+    async editVehicle(updatedVehicle) { return await this._sync('edit_vehicle', { data: updatedVehicle }); },
+
     showManageVehicle(reg) {
         const data = this.getVehicleDataByReg(reg);
         if (!data) return;
 
         const body = `
-            <div style="text-align:left">
-                <p><strong>Registration:</strong> ${data.vehicle.reg_number}</p>
-                <p><strong>Make/Model:</strong> ${data.vehicle.make} ${data.vehicle.model} (${data.vehicle.year})</p>
-                <p><strong>Category:</strong> ${data.vehicle.category}</p>
-                <p><strong>Owner ID:</strong> ${data.vehicle.owner_id}</p>
-                <p><strong>Reg Date:</strong> ${data.vehicle.reg_date}</p>
-                ${data.vehicle.business_license_no ? `<p><strong>Business License:</strong> ${data.vehicle.business_license_no}</p>` : ''}
+            <form id="edit-vehicle-form" style="text-align:left">
+                <div class="form-group">
+                    <label>Registration: <strong>${data.vehicle.reg_number}</strong></label>
+                    <input type="hidden" id="edit_reg" value="${data.vehicle.reg_number}">
+                </div>
+                <div class="form-group" style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label>Make</label>
+                        <input type="text" id="edit_make" required value="${data.vehicle.make}">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Model</label>
+                        <input type="text" id="edit_model" required value="${data.vehicle.model}">
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label>Category</label>
+                        <select id="edit_category" required>
+                            <option value="Private" ${data.vehicle.category === 'Private' ? 'selected' : ''}>Private</option>
+                            <option value="Hire Car" ${data.vehicle.category === 'Hire Car' ? 'selected' : ''}>Hire Car (Taxi)</option>
+                            <option value="Motor Bus" ${data.vehicle.category === 'Motor Bus' ? 'selected' : ''}>Motor Bus</option>
+                            <option value="Lorry" ${data.vehicle.category === 'Lorry' ? 'selected' : ''}>Lorry / Goods</option>
+                            <option value="Tractor" ${data.vehicle.category === 'Tractor' ? 'selected' : ''}>Tractor</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Year</label>
+                        <input type="number" id="edit_year" required value="${data.vehicle.year}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Owner Username</label>
+                    <input type="text" id="edit_owner" required value="${data.vehicle.owner_id}">
+                </div>
+                <div class="form-group">
+                    <label>Business License #</label>
+                    <input type="text" id="edit_biz" value="${data.vehicle.business_license_no || ''}">
+                </div>
                 <hr style="margin:1rem 0; opacity:0.1">
                 <p><strong>Recent Offences:</strong> ${data.offences.length}</p>
                 <p><strong>License Status:</strong> ${data.licenses.length > 0 ? data.licenses[0].status : 'N/A'}</p>
-            </div>
+            </form>
         `;
-        this.showModal('Manage Vehicle', body);
+
+        this.showModal('Edit Vehicle', body, [
+            { text: 'Cancel', class: 'btn-secondary', onclick: () => this.hideModal() },
+            {
+                text: 'Save Changes', class: '', preventClose: true, onclick: async () => {
+                    const updated = {
+                        reg_number: document.getElementById('edit_reg').value,
+                        make: document.getElementById('edit_make').value,
+                        model: document.getElementById('edit_model').value,
+                        category: document.getElementById('edit_category').value,
+                        year: document.getElementById('edit_year').value,
+                        owner_id: document.getElementById('edit_owner').value,
+                        business_license_no: document.getElementById('edit_biz').value,
+                        reg_date: data.vehicle.reg_date // keep original
+                    };
+
+                    await this.editVehicle(updated);
+                    this.hideModal();
+                    if (typeof renderVehicles === 'function') renderVehicles();
+                }
+            }
+        ]);
     },
 
     getCurrentUser() {

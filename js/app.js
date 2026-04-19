@@ -142,14 +142,18 @@ const VMS = {
         `;
 
         if (user) {
-            if (user.role === 'Admin' || user.role === 'Licensing Officer') {
+            console.log('Sidebar Injector: User found:', user.username, 'Role:', user.role);
+            const isAdmin = user.role && user.role.toLowerCase() === 'admin';
+            const isOfficer = user.role && user.role.toLowerCase() === 'licensing officer';
+
+            if (isAdmin || isOfficer) {
                 navHtml += `
                     <a href="vehicles.html" class="nav-link">Vehicles</a>
                     <a href="licenses.html" class="nav-link">Licensing</a>
                     <a href="offences.html" class="nav-link">Offences</a>
                     <a href="lookup.html" class="nav-link">Vehicle Lookup</a>
                     <a href="fitness.html" class="nav-link">Fitness & Zones</a>
-                    ${user.role === 'Admin' ? '<a href="users.html" class="nav-link">User Management</a>' : ''}
+                    ${isAdmin ? '<a href="users.html" class="nav-link">User Management</a>' : ''}
                 `;
             }
             if (user.role === 'Vehicle Owner') {

@@ -1,43 +1,34 @@
-/**
- * Guyana VMS - Core Logic
- * Handles data persistence using localStorage
- */
-
 const VMS = {
     _initPromise: null,
+    _apiUrl: 'api.php',
+
     // Initialization: Ensure essential data structures exist
     init() {
         if (this._initPromise) return this._initPromise;
 
         this._initPromise = (async () => {
-            if (!localStorage.getItem('vms_initialized')) {
-                console.log('Starting VMS Initialization...');
-                try {
-                    // Use relative path but ensure it targets the same dir as the script
-                    const response = await fetch('./data.json');
-                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
+            // Priority 1: Try to get fresh data from server (XAMPP environment)
+            try {
+                const response = await fetch(this._apiUrl);
+                if (response.ok) {
                     const data = await response.json();
+                    this._persistToLocal(data);
+                    console.log('VMS: Data synced from server.');
+                }
+            } catch (err) {
+                console.warn('VMS: Server sync failed, using localStorage fallback.');
+            }
 
-                    localStorage.setItem('vms_users', JSON.stringify(data.users));
-                    localStorage.setItem('vms_vehicles', JSON.stringify(data.vehicles));
-                    localStorage.setItem('vms_licenses', JSON.stringify(data.licenses));
-                    localStorage.setItem('vms_offences', JSON.stringify(data.offences));
-                    localStorage.setItem('vms_fitness', JSON.stringify(data.fitness || []));
-                    localStorage.setItem('vms_zones', JSON.stringify(data.zones));
-
+            // Priority 2: Fallback to localStorage if no server data
+            if (!localStorage.getItem('vms_initialized')) {
+                console.log('Starting VMS Initialization from data.json...');
+                try {
+                    const response = await fetch('./data.json');
+                    const data = await response.json();
+                    this._persistToLocal(data);
                     localStorage.setItem('vms_initialized', 'true');
-                    console.log('VMS Data successfully loaded from data.json');
                 } catch (err) {
                     console.error('Data loading failed:', err.message);
-                    // Fallback to essential admin if everything fails
-                    if (!localStorage.getItem('vms_users')) {
-                        console.warn('Falling back to default admin credentials.');
-                        localStorage.setItem('vms_users', JSON.stringify([
-                            { id: 1, username: 'admin', password: '123', role: 'Admin', full_name: 'System Admin', email: 'admin@vms.gy' }
-                        ]));
-                        localStorage.setItem('vms_initialized', 'true');
-                    }
                 }
             }
         })();
@@ -45,9 +36,84 @@ const VMS = {
         return this._initPromise;
     },
 
-    // Session Management (Mock)
+    _persistToLocal(data) {
+        localStorage.setItem('vms_users', JSON.stringify(data.users || []));
+        localStorage.setItem('vms_vehicles', JSON.stringify(data.vehicles || []));
+        localStorage.setItem('vms_licenses', JSON.stringify(data.licenses || []));
+        localStorage.setItem('vms_offences', JSON.stringify(data.offences || []));
+        localStorage.setItem('vms_fitness', JSON.stringify(data.fitness || []));
+        localStorage.setItem('vms_zones', JSON.stringify(data.zones || []));
+    },
+
+    async _sync(action, params = {}) {
+        // Update LocalStorage first for instant UI
+        this._updateLocal(action, params);
+
+        // Attempt Server sync
+        try {
+            const body = { action: action, ...params };
+            const response = await fetch(this._apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return await response.json();
+        } catch (err) {
+            console.warn('Backend sync failed. Changes are local only.');
+            return { success: true, localOnly: true };
+        }
+    },
+
+    _updateLocal(action, params) {
+        const vehicles = this.getVehicles();
+        const licenses = JSON.parse(localStorage.getItem('vms_licenses')) || [];
+        const offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
+        const fitness = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+        const users = this.getUsers();
+
+        switch (action) {
+            case 'add_vehicle':
+                params.data.id = Date.now();
+                vehicles.push(params.data);
+                localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
+                break;
+            case 'delete_vehicle':
+                const filteredV = vehicles.filter(v => v.reg_number !== params.reg);
+                localStorage.setItem('vms_vehicles', JSON.stringify(filteredV));
+                break;
+            case 'add_license':
+                params.data.id = Date.now();
+                licenses.push(params.data);
+                localStorage.setItem('vms_licenses', JSON.stringify(licenses));
+                break;
+            case 'delete_license':
+                const filteredL = licenses.filter(l => l.id !== params.id);
+                localStorage.setItem('vms_licenses', JSON.stringify(filteredL));
+                break;
+            case 'add_offence':
+                params.data.id = Date.now();
+                offences.push(params.data);
+                localStorage.setItem('vms_offences', JSON.stringify(offences));
+                break;
+            case 'delete_offence':
+                const filteredO = offences.filter(o => o.id !== params.id);
+                localStorage.setItem('vms_offences', JSON.stringify(filteredO));
+                break;
+            case 'add_fitness':
+                params.data.id = Date.now();
+                fitness.push(params.data);
+                localStorage.setItem('vms_fitness', JSON.stringify(fitness));
+                break;
+            case 'delete_fitness':
+                const filteredF = fitness.filter(f => f.id !== params.id);
+                localStorage.setItem('vms_fitness', JSON.stringify(filteredF));
+                break;
+        }
+    },
+
+    // Session Management
     login(username, password) {
-        const users = JSON.parse(localStorage.getItem('vms_users'));
+        const users = this.getUsers();
         const user = users.find(u => u.username === username && u.password === password);
         if (user) {
             sessionStorage.setItem('vms_current_user', JSON.stringify(user));
@@ -78,44 +144,25 @@ const VMS = {
 
     isAdmin() {
         const user = this.getCurrentUser();
-        return user && user.role && user.role.toLowerCase() === 'admin';
+        if (!user) return false;
+        return (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin');
     },
 
-    // CRUD - Vehicles
-    addVehicle(vehicle) {
-        const vehicles = JSON.parse(localStorage.getItem('vms_vehicles'));
-        vehicle.id = Date.now();
-        vehicle.reg_date = new Date().toISOString().split('T')[0];
-        vehicles.push(vehicle);
-        localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
-        return vehicle;
-    },
+    // CRUD Methods
+    getVehicles() { return JSON.parse(localStorage.getItem('vms_vehicles')) || []; },
+    getUsers() { return JSON.parse(localStorage.getItem('vms_users')) || []; },
 
-    getVehicles() {
-        return JSON.parse(localStorage.getItem('vms_vehicles'));
-    },
+    async addVehicle(vehicle) { return await this._sync('add_vehicle', { data: vehicle }); },
+    async deleteVehicle(reg) { return await this._sync('delete_vehicle', { reg: reg }); },
 
-    deleteVehicle(reg) {
-        let vehicles = this.getVehicles();
-        vehicles = vehicles.filter(v => v.reg_number !== reg);
-        localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
-    },
+    async applyLicense(license) { return await this._sync('add_license', { data: license }); },
+    async deleteLicense(id) { return await this._sync('delete_license', { id: id }); },
 
-    // CRUD - Licenses
-    applyLicense(license) {
-        const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
-        license.id = Date.now();
-        license.status = 'Pending';
-        licenses.push(license);
-        localStorage.setItem('vms_licenses', JSON.stringify(licenses));
-        return license;
-    },
+    async addOffence(offence) { return await this._sync('add_offence', { data: offence }); },
+    async deleteOffence(id) { return await this._sync('delete_offence', { id: id }); },
 
-    deleteLicense(id) {
-        let licenses = JSON.parse(localStorage.getItem('vms_licenses'));
-        licenses = licenses.filter(l => l.id !== id);
-        localStorage.setItem('vms_licenses', JSON.stringify(licenses));
-    },
+    async addFitness(record) { return await this._sync('add_fitness', { data: record }); },
+    async deleteFitness(id) { return await this._sync('delete_fitness', { id: id }); },
 
     getVehicleDataByReg(reg) {
         const vehicles = this.getVehicles();
@@ -134,64 +181,14 @@ const VMS = {
         };
     },
 
-    getUsers() {
-        return JSON.parse(localStorage.getItem('vms_users')) || [];
-    },
-
-    addUser(user) {
-        const users = this.getUsers();
-        user.id = Date.now();
-        users.push(user);
-        localStorage.setItem('vms_users', JSON.stringify(users));
-        return user;
-    },
-
-    deleteUser(userId) {
-        let users = this.getUsers();
-        users = users.filter(u => u.id !== userId);
-        localStorage.setItem('vms_users', JSON.stringify(users));
-    },
-
-    addOffence(offence) {
-        const offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
-        offence.id = Date.now();
-        offences.push(offence);
-        localStorage.setItem('vms_offences', JSON.stringify(offences));
-    },
-
-    deleteOffence(id) {
-        let offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
-        offences = offences.filter(o => o.id !== id);
-        localStorage.setItem('vms_offences', JSON.stringify(offences));
-    },
-
-    addFitness(record) {
-        const fitness = JSON.parse(localStorage.getItem('vms_fitness')) || [];
-        record.id = Date.now();
-        fitness.push(record);
-        localStorage.setItem('vms_fitness', JSON.stringify(fitness));
-    },
-
-    deleteFitness(id) {
-        let fitness = JSON.parse(localStorage.getItem('vms_fitness')) || [];
-        fitness = fitness.filter(f => f.id !== id);
-        localStorage.setItem('vms_fitness', JSON.stringify(fitness));
-    },
-
-    // UI Helpers
     injectSidebar() {
         const user = this.getCurrentUser();
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
-        let navHtml = `
-            <h2>GUYANA VMS</h2>
-            <a href="index.html" class="nav-link">Dashboard</a>
-        `;
-
+        let navHtml = `<h2>GUYANA VMS</h2><a href="index.html" class="nav-link">Dashboard</a>`;
         if (user) {
-            console.log('Sidebar Injector: User found:', user.username, 'Role:', user.role);
-            const isAdmin = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin');
+            const isAdmin = this.isAdmin();
             const isOfficer = user.role && user.role.toLowerCase() === 'licensing officer';
 
             if (isAdmin || isOfficer) {
@@ -204,31 +201,17 @@ const VMS = {
                     ${isAdmin ? '<a href="users.html" class="nav-link">User Management</a>' : ''}
                 `;
             }
-            if (user.role === 'Vehicle Owner') {
-                navHtml += `
-                    <a href="my_vehicles.html" class="nav-link">My Vehicles</a>
-                    <a href="my_licenses.html" class="nav-link">My Licenses</a>
-                `;
-            }
             navHtml += `<a href="#" onclick="VMS.logout()" class="nav-link" style="margin-top:2rem; color:var(--danger)">Logout (${user.username})</a>`;
-        } else {
-            navHtml += `<a href="login.html" class="nav-link">Login</a>`;
         }
-
         sidebar.innerHTML = navHtml;
 
-        // Add Mobile Header to body if it doesn't exist
         if (!document.querySelector('.mobile-header')) {
             const mHeader = document.createElement('div');
             mHeader.className = 'mobile-header';
-            mHeader.innerHTML = `
-                <div style="font-weight:bold; color:var(--accent);">GUYANA VMS</div>
-                <button class="hamburger" onclick="VMS.toggleSidebar()">☰</button>
-            `;
+            mHeader.innerHTML = `<div style="font-weight:bold; color:var(--accent);">GUYANA VMS</div><button class="hamburger" onclick="VMS.toggleSidebar()">☰</button>`;
             document.body.prepend(mHeader);
         }
 
-        // Auto-wrap tables for responsiveness
         document.querySelectorAll('table').forEach(table => {
             if (!table.parentElement.classList.contains('table-responsive')) {
                 const wrapper = document.createElement('div');
@@ -240,16 +223,4 @@ const VMS = {
     }
 };
 
-// Initialize data
 VMS.init();
-
-VMS.resetData = function () {
-    localStorage.removeItem('vms_initialized');
-    localStorage.removeItem('vms_users');
-    localStorage.removeItem('vms_vehicles');
-    localStorage.removeItem('vms_licenses');
-    localStorage.removeItem('vms_offences');
-    localStorage.removeItem('vms_fitness');
-    localStorage.removeItem('vms_zones');
-    console.log('VMS Storage Cleared. Refresh to re-initialize.');
-};

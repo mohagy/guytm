@@ -14,7 +14,9 @@
     <div class="main-content">
         <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
             <h1>Traffic Offence Tracking</h1>
-            <button onclick="document.getElementById('off-modal').style.display='block'">+ Report Offence</button>
+            <div id="admin-actions" style="display:none;">
+                <button onclick="document.getElementById('off-modal').style.display='block'">+ Report Offence</button>
+            </div>
         </header>
 
         <div class="card">
@@ -29,6 +31,7 @@
                             <th>Fine (GYD)</th>
                             <th>Date</th>
                             <th>Status</th>
+                            ${VMS.isAdmin() ? '<th>Actions</th>' : ''}
                         </tr>
                     </thead>
                     <tbody id="offence-table-body">
@@ -79,6 +82,17 @@
             VMS.requireLogin();
             VMS.injectSidebar();
 
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions').style.display = 'block';
+            }
+
+            window.deleteOffence = function (id) {
+                if (confirm('Delete this offence record?')) {
+                    VMS.deleteOffence(id);
+                    renderOffences();
+                }
+            };
+
             function renderOffences() {
                 const offences = JSON.parse(localStorage.getItem('vms_offences'));
                 const tbody = document.getElementById('offence-table-body');
@@ -96,14 +110,14 @@
                         <td>$${o.fine.toLocaleString()}</td>
                         <td>${o.date}</td>
                         <td><span class="badge badge-expired">${o.status}</span></td>
+                        ${VMS.isAdmin() ? `<td><button onclick="deleteOffence(${o.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : ''}
                     </tr>
                 `).join('');
             }
 
             document.getElementById('offence-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const offences = JSON.parse(localStorage.getItem('vms_offences'));
-                offences.push({
+                VMS.addOffence({
                     reg: document.getElementById('off_reg').value,
                     section: document.getElementById('section_no').value,
                     desc: document.getElementById('description').value,
@@ -111,7 +125,6 @@
                     date: new Date().toLocaleString(),
                     status: 'Unpaid'
                 });
-                localStorage.setItem('vms_offences', JSON.stringify(offences));
                 document.getElementById('off-modal').style.display = 'none';
                 renderOffences();
                 alert('Offence recorded.');

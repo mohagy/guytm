@@ -25,6 +25,7 @@
                             <th>Expiry Date</th>
                             <th>Result</th>
                             <th>Comments</th>
+                            ${VMS.isAdmin() ? '<th>Actions</th>' : ''}
                         </tr>
                     </thead>
                     <tbody id="fitness-table-body">
@@ -32,8 +33,10 @@
                     </tbody>
                 </table>
             </div>
-            <button onclick="document.getElementById('fit-modal').style.display='block'" style="margin-top:1rem;">+
-                Record New Inspection</button>
+            <div id="admin-actions-fit" style="display:none; margin-top:1rem;">
+                <button onclick="document.getElementById('fit-modal').style.display='block'">+ Record New
+                    Inspection</button>
+            </div>
         </div>
 
         <div class="card">
@@ -81,6 +84,17 @@
             VMS.requireLogin();
             VMS.injectSidebar();
 
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions-fit').style.display = 'block';
+            }
+
+            window.deleteFitness = function (id) {
+                if (confirm('Delete this fitness record?')) {
+                    VMS.deleteFitness(id);
+                    renderFitness();
+                }
+            };
+
             function renderFitness() {
                 const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];
                 const tbody = document.getElementById('fitness-table-body');
@@ -91,8 +105,9 @@
                         <td>${c.expiry}</td>
                         <td><span class="badge ${c.result === 'Pass' ? 'badge-active' : 'badge-expired'}">${c.result}</span></td>
                         <td>${c.comments}</td>
+                        ${VMS.isAdmin() ? `<td><button onclick="deleteFitness(${c.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : ''}
                     </tr>
-                `).join('') || '<tr><td colspan="5" style="text-align:center;">No inspection records active.</td></tr>';
+                `).join('') || '<tr><td colspan="' + (VMS.isAdmin() ? 6 : 5) + '" style="text-align:center;">No inspection records active.</td></tr>';
             }
 
             function renderZones() {
@@ -107,15 +122,13 @@
 
             document.getElementById('fitness-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];
-                certs.push({
+                VMS.addFitness({
                     reg: document.getElementById('fit_reg').value,
                     result: document.getElementById('fit_result').value,
                     comments: document.getElementById('fit_comments').value,
                     expiry: document.getElementById('fit_expiry').value,
                     issue: new Date().toISOString().split('T')[0]
                 });
-                localStorage.setItem('vms_fitness', JSON.stringify(certs));
                 document.getElementById('fit-modal').style.display = 'none';
                 renderFitness();
                 alert('Fitness record updated.');

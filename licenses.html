@@ -14,7 +14,10 @@
     <div class="main-content">
         <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
             <h1>Licensing Management</h1>
-            <button onclick="document.getElementById('lic-modal').style.display='block'">+ Issue New License</button>
+            <div id="admin-actions" style="display:none;">
+                <button onclick="document.getElementById('lic-modal').style.display='block'">+ Issue New
+                    License</button>
+            </div>
         </header>
 
         <div class="card">
@@ -29,6 +32,7 @@
                             <th>Zone</th>
                             <th>Expiry</th>
                             <th>Status</th>
+                            ${VMS.isAdmin() ? '<th>Actions</th>' : ''}
                         </tr>
                     </thead>
                     <tbody id="license-table-body">
@@ -87,6 +91,17 @@
             VMS.requireLogin();
             VMS.injectSidebar();
 
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions').style.display = 'block';
+            }
+
+            window.deleteLicense = function (id) {
+                if (confirm('Permanently revoke and delete this license record?')) {
+                    VMS.deleteLicense(id);
+                    renderLicenses();
+                }
+            };
+
             function renderLicenses() {
                 const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
                 const tbody = document.getElementById('license-table-body');
@@ -104,28 +119,37 @@
                         <td>${l.zone || 'Global'}</td>
                         <td>${l.expiry_date}</td>
                         <td><span class="badge badge-active">${l.status}</span></td>
+                        ${VMS.isAdmin() ? `<td><button onclick="deleteLicense(${l.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : ''}
                     </tr>
                 `).join('');
             }
+                        <td>${l.user_id}</td>
+                        <td>${l.zone || 'Global'}</td>
+                        <td>${l.expiry_date}</td>
+                        <td><span class="badge badge-active">${l.status}</span></td>
+                        ${ VMS.isAdmin() ? `<td><button onclick="deleteLicense(${l.id})" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger);">Delete</button></td>` : '' }
+                    </tr >
+                `).join('');
+        }
 
             document.getElementById('license-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const newLic = {
-                    license_no: document.getElementById('license_no').value,
-                    type: document.getElementById('type').value,
-                    user_id: document.getElementById('lic_username').value,
-                    zone: document.getElementById('zone').value,
-                    expiry_date: document.getElementById('expiry').value,
-                    issue_date: new Date().toISOString().split('T')[0]
-                };
+            e.preventDefault();
+            const newLic = {
+                license_no: document.getElementById('license_no').value,
+                type: document.getElementById('type').value,
+                user_id: document.getElementById('lic_username').value,
+                zone: document.getElementById('zone').value,
+                expiry_date: document.getElementById('expiry').value,
+                issue_date: new Date().toISOString().split('T')[0]
+            };
 
-                VMS.applyLicense(newLic);
-                document.getElementById('lic-modal').style.display = 'none';
-                renderLicenses();
-                alert('License issued!');
-            });
-
+            VMS.applyLicense(newLic);
+            document.getElementById('lic-modal').style.display = 'none';
             renderLicenses();
+            alert('License issued!');
+        });
+
+        renderLicenses();
         });
     </script>
 </body>

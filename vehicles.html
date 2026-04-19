@@ -14,7 +14,9 @@
     <div class="main-content">
         <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
             <h1>Vehicle Management</h1>
-            <button onclick="document.getElementById('reg-modal').style.display='block'">+ Register Vehicle</button>
+            <div id="admin-actions" style="display:none;">
+                <button onclick="document.getElementById('reg-modal').style.display='block'">+ Register Vehicle</button>
+            </div>
         </header>
 
         <div class="card">
@@ -89,6 +91,17 @@
             VMS.requireLogin();
             VMS.injectSidebar();
 
+            if (VMS.isAdmin()) {
+                document.getElementById('admin-actions').style.display = 'block';
+            }
+
+            window.deleteVehicle = function (reg) {
+                if (confirm('Delete vehicle ' + reg + '? This will not remove associated records but the vehicle will no longer appear in the registry.')) {
+                    VMS.deleteVehicle(reg);
+                    renderVehicles();
+                }
+            };
+
             function renderVehicles() {
                 const vehicles = VMS.getVehicles();
                 const tbody = document.getElementById('vehicle-table-body');
@@ -105,10 +118,23 @@
                         <td>${v.make} ${v.model}</td>
                         <td>${v.owner_id}</td>
                         <td>${v.business_license_no || 'N/A'}</td>
-                        <td><button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button></td>
+                        <td>
+                            <button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
+                            ${VMS.isAdmin() ? `<button onclick="deleteVehicle('${v.reg_number}')" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
+                        </td>
                     </tr>
                 `).join('');
             }
+                        <td>${v.make} ${v.model}</td>
+                        <td>${v.owner_id}</td>
+                        <td>${v.business_license_no || 'N/A'}</td>
+                        <td>
+                            <button style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--sidebar-bg);">Manage</button>
+                            ${VMS.isAdmin() ? `<button onclick="deleteVehicle('${v.reg_number}')" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--danger); margin-left:0.5rem;">Delete</button>` : ''}
+                        </td>
+                    </tr >
+                `).join('');
+        }
 
             window.toggleBizLicense = function () {
                 const cat = document.getElementById('category').value;
@@ -133,7 +159,7 @@
                 alert('Vehicle registered successfully!');
             });
 
-            renderVehicles();
+        renderVehicles();
         });
     </script>
 </body>

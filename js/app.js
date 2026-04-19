@@ -76,6 +76,11 @@ const VMS = {
         }
     },
 
+    isAdmin() {
+        const user = this.getCurrentUser();
+        return user && user.role && user.role.toLowerCase() === 'admin';
+    },
+
     // CRUD - Vehicles
     addVehicle(vehicle) {
         const vehicles = JSON.parse(localStorage.getItem('vms_vehicles'));
@@ -90,6 +95,12 @@ const VMS = {
         return JSON.parse(localStorage.getItem('vms_vehicles'));
     },
 
+    deleteVehicle(reg) {
+        let vehicles = this.getVehicles();
+        vehicles = vehicles.filter(v => v.reg_number !== reg);
+        localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
+    },
+
     // CRUD - Licenses
     applyLicense(license) {
         const licenses = JSON.parse(localStorage.getItem('vms_licenses'));
@@ -98,6 +109,12 @@ const VMS = {
         licenses.push(license);
         localStorage.setItem('vms_licenses', JSON.stringify(licenses));
         return license;
+    },
+
+    deleteLicense(id) {
+        let licenses = JSON.parse(localStorage.getItem('vms_licenses'));
+        licenses = licenses.filter(l => l.id !== id);
+        localStorage.setItem('vms_licenses', JSON.stringify(licenses));
     },
 
     getVehicleDataByReg(reg) {
@@ -133,6 +150,32 @@ const VMS = {
         let users = this.getUsers();
         users = users.filter(u => u.id !== userId);
         localStorage.setItem('vms_users', JSON.stringify(users));
+    },
+
+    addOffence(offence) {
+        const offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
+        offence.id = Date.now();
+        offences.push(offence);
+        localStorage.setItem('vms_offences', JSON.stringify(offences));
+    },
+
+    deleteOffence(id) {
+        let offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
+        offences = offences.filter(o => o.id !== id);
+        localStorage.setItem('vms_offences', JSON.stringify(offences));
+    },
+
+    addFitness(record) {
+        const fitness = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+        record.id = Date.now();
+        fitness.push(record);
+        localStorage.setItem('vms_fitness', JSON.stringify(fitness));
+    },
+
+    deleteFitness(id) {
+        let fitness = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+        fitness = fitness.filter(f => f.id !== id);
+        localStorage.setItem('vms_fitness', JSON.stringify(fitness));
     },
 
     // UI Helpers

@@ -112,6 +112,24 @@ const VMS = {
         };
     },
 
+    getUsers() {
+        return JSON.parse(localStorage.getItem('vms_users')) || [];
+    },
+
+    addUser(user) {
+        const users = this.getUsers();
+        user.id = Date.now();
+        users.push(user);
+        localStorage.setItem('vms_users', JSON.stringify(users));
+        return user;
+    },
+
+    deleteUser(userId) {
+        let users = this.getUsers();
+        users = users.filter(u => u.id !== userId);
+        localStorage.setItem('vms_users', JSON.stringify(users));
+    },
+
     // UI Helpers
     injectSidebar() {
         const user = this.getCurrentUser();
@@ -131,6 +149,7 @@ const VMS = {
                     <a href="offences.html" class="nav-link">Offences</a>
                     <a href="lookup.html" class="nav-link">Vehicle Lookup</a>
                     <a href="fitness.html" class="nav-link">Fitness & Zones</a>
+                    ${user.role === 'Admin' ? '<a href="users.html" class="nav-link">User Management</a>' : ''}
                 `;
             }
             if (user.role === 'Vehicle Owner') {

@@ -100,16 +100,6 @@
                 alert(`Technical Inspection Details for ID: ${id}\nComplete test history and pass/fail criteria would be here.`);
             };
 
-            if (VMS.isAdmin()) {
-                document.getElementById('admin-actions-fit').style.display = 'block';
-            }
-
-            window.deleteFitness = function (id) {
-                if (confirm('Delete this fitness record?')) {
-                    VMS.deleteFitness(id);
-                    renderFitness();
-                }
-            };
 
             function renderFitness() {
                 const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];

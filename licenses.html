@@ -131,26 +131,25 @@
                     </tr>
                 `).join('');
             }
-        }
 
             document.getElementById('license-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newLic = {
-                license_no: document.getElementById('license_no').value,
-                type: document.getElementById('type').value,
-                user_id: document.getElementById('lic_username').value,
-                zone: document.getElementById('zone').value,
-                expiry_date: document.getElementById('expiry').value,
-                issue_date: new Date().toISOString().split('T')[0]
-            };
+                e.preventDefault();
+                const newLic = {
+                    license_no: document.getElementById('license_no').value,
+                    type: document.getElementById('type').value,
+                    user_id: document.getElementById('lic_username').value,
+                    zone: document.getElementById('zone').value,
+                    expiry_date: document.getElementById('expiry').value,
+                    issue_date: new Date().toISOString().split('T')[0]
+                };
 
-            VMS.applyLicense(newLic);
-            document.getElementById('lic-modal').style.display = 'none';
+                VMS.applyLicense(newLic);
+                document.getElementById('lic-modal').style.display = 'none';
+                renderLicenses();
+                alert('License issued!');
+            });
+
             renderLicenses();
-            alert('License issued!');
-        });
-
-        renderLicenses();
         });
     </script>
 </body>

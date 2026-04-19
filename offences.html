@@ -98,16 +98,6 @@
                 alert(`Viewing details for Offence #${id}\nPayment processing and court appearance tools would be here.`);
             };
 
-            if (VMS.isAdmin()) {
-                document.getElementById('admin-actions').style.display = 'block';
-            }
-
-            window.deleteOffence = function (id) {
-                if (confirm('Delete this offence record?')) {
-                    VMS.deleteOffence(id);
-                    renderOffences();
-                }
-            };
 
             function renderOffences() {
                 const offences = JSON.parse(localStorage.getItem('vms_offences'));

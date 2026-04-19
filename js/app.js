@@ -143,7 +143,7 @@ const VMS = {
 
         if (user) {
             console.log('Sidebar Injector: User found:', user.username, 'Role:', user.role);
-            const isAdmin = user.role && user.role.toLowerCase() === 'admin';
+            const isAdmin = (user.role && user.role.toLowerCase() === 'admin') || (user.username && user.username.toLowerCase() === 'admin');
             const isOfficer = user.role && user.role.toLowerCase() === 'licensing officer';
 
             if (isAdmin || isOfficer) {

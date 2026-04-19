@@ -115,6 +115,27 @@ const VMS = {
                     localStorage.setItem('vms_vehicles', JSON.stringify(vehicles));
                 }
                 break;
+            case 'edit_license':
+                const indL = licenses.findIndex(l => l.id == params.data.id);
+                if (indL !== -1) {
+                    licenses[indL] = { ...licenses[indL], ...params.data };
+                    localStorage.setItem('vms_licenses', JSON.stringify(licenses));
+                }
+                break;
+            case 'edit_offence':
+                const indO = offences.findIndex(o => o.id == params.data.id);
+                if (indO !== -1) {
+                    offences[indO] = { ...offences[indO], ...params.data };
+                    localStorage.setItem('vms_offences', JSON.stringify(offences));
+                }
+                break;
+            case 'edit_fitness':
+                const indF = fitness.findIndex(f => f.id == params.data.id);
+                if (indF !== -1) {
+                    fitness[indF] = { ...fitness[indF], ...params.data };
+                    localStorage.setItem('vms_fitness', JSON.stringify(fitness));
+                }
+                break;
         }
     },
 
@@ -298,12 +319,15 @@ const VMS = {
 
     async applyLicense(license) { return await this._sync('add_license', { data: license }); },
     async deleteLicense(id) { return await this._sync('delete_license', { id: id }); },
+    async editLicense(updated) { return await this._sync('edit_license', { data: updated }); },
 
     async addOffence(offence) { return await this._sync('add_offence', { data: offence }); },
     async deleteOffence(id) { return await this._sync('delete_offence', { id: id }); },
+    async editOffence(updated) { return await this._sync('edit_offence', { data: updated }); },
 
     async addFitness(record) { return await this._sync('add_fitness', { data: record }); },
     async deleteFitness(id) { return await this._sync('delete_fitness', { id: id }); },
+    async editFitness(updated) { return await this._sync('edit_fitness', { data: updated }); },
 
     getVehicleDataByReg(reg) {
         const vehicles = this.getVehicles();

@@ -97,6 +97,17 @@ if ($method === 'POST') {
             $success = true;
             break;
 
+        case 'edit_license':
+            $edited = $input['data'];
+            foreach ($data['licenses'] as &$l) {
+                if ($l['id'] == $edited['id']) {
+                    $l = array_merge($l, $edited);
+                    $success = true;
+                    break;
+                }
+            }
+            break;
+
         case 'add_offence':
             $newOffence = $input['data'];
             $newOffence['id'] = time();
@@ -113,6 +124,17 @@ if ($method === 'POST') {
             $success = true;
             break;
 
+        case 'edit_offence':
+            $edited = $input['data'];
+            foreach ($data['offences'] as &$o) {
+                if ($o['id'] == $edited['id']) {
+                    $o = array_merge($o, $edited);
+                    $success = true;
+                    break;
+                }
+            }
+            break;
+
         case 'add_fitness':
             $newFit = $input['data'];
             $newFit['id'] = time();
@@ -127,6 +149,17 @@ if ($method === 'POST') {
             });
             $data['fitness'] = array_values($data['fitness']);
             $success = true;
+            break;
+
+        case 'edit_fitness':
+            $edited = $input['data'];
+            foreach ($data['fitness'] as &$f) {
+                if ($f['id'] == $edited['id']) {
+                    $f = array_merge($f, $edited);
+                    $success = true;
+                    break;
+                }
+            }
             break;
 
         case 'add_user':

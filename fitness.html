@@ -91,7 +91,46 @@
 
         window.manageFitness = function (id) {
             console.log('VMS: Managing fitness record', id);
-            VMS.showModal('Technical Inspection', `You are viewing the detailed Technical Inspection Report for ID <strong>#${id}</strong>. <br><br>Pass/Fail criteria, mechanic notes, and historical inspection comparisons would be displayed here.`);
+            const certs = JSON.parse(localStorage.getItem('vms_fitness')) || [];
+            const data = certs.find(c => c.id == id);
+            if (!data) return;
+
+            const body = `
+                <form id="edit-fit-form" style="text-align:left">
+                    <input type="hidden" id="edit_fit_id" value="${data.id}">
+                    <div class="form-group">
+                        <label>Vehicle Reg Number</label>
+                        <input type="text" id="edit_fit_reg" required value="${data.reg}" readonly style="background:#f0f4f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Inspection Result</label>
+                        <select id="edit_fit_result" required>
+                            <option value="Pass" ${data.result === 'Pass' ? 'selected' : ''}>Pass - Fit for Road</option>
+                            <option value="Fail" ${data.result === 'Fail' ? 'selected' : ''}>Fail - Defects Found</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Comments / Noted Defects</label>
+                        <textarea id="edit_fit_comments" rows="3">${data.comments || ''}</textarea>
+                    </div>
+                </form>
+            `;
+
+            VMS.showModal('Edit Technical Inspection', body, [
+                { text: 'Cancel', class: 'btn-secondary', onclick: () => VMS.hideModal() },
+                {
+                    text: 'Save Changes', class: '', preventClose: true, onclick: async () => {
+                        const updated = {
+                            id: document.getElementById('edit_fit_id').value,
+                            result: document.getElementById('edit_fit_result').value,
+                            comments: document.getElementById('edit_fit_comments').value
+                        };
+                        await VMS.editFitness(updated);
+                        VMS.hideModal();
+                        if (typeof renderFitness === 'function') renderFitness();
+                    }
+                }
+            ]);
         };
 
         VMS.init().then(() => {

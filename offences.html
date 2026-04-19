@@ -89,7 +89,45 @@
 
         window.manageOffence = function (id) {
             console.log('VMS: Managing offence', id);
-            VMS.showModal('Offence Details', `You are viewing details for Offence Record <strong>#${id}</strong>. <br><br>Payment processing, court appearance scheduling, and officer statement logs would be managed here.`);
+            const offences = JSON.parse(localStorage.getItem('vms_offences')) || [];
+            const data = offences.find(o => o.id == id);
+            if (!data) return;
+
+            const body = `
+                <form id="edit-off-form" style="text-align:left">
+                    <input type="hidden" id="edit_off_id" value="${data.id}">
+                    <div class="form-group">
+                        <label>Offence ID: <strong>#${data.id}</strong></label>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Reg Number</label>
+                        <input type="text" id="edit_off_reg" required value="${data.reg}" readonly style="background:#f0f4f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="edit_off_status" required>
+                            <option value="Unpaid" ${data.status === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+                            <option value="Paid" ${data.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                            <option value="Disputed" ${data.status === 'Disputed' ? 'selected' : ''}>Disputed</option>
+                        </select>
+                    </div>
+                </form>
+            `;
+
+            VMS.showModal('Edit Offence', body, [
+                { text: 'Cancel', class: 'btn-secondary', onclick: () => VMS.hideModal() },
+                {
+                    text: 'Save Changes', class: '', preventClose: true, onclick: async () => {
+                        const updated = {
+                            id: document.getElementById('edit_off_id').value,
+                            status: document.getElementById('edit_off_status').value
+                        };
+                        await VMS.editOffence(updated);
+                        VMS.hideModal();
+                        if (typeof renderOffences === 'function') renderOffences();
+                    }
+                }
+            ]);
         };
 
         VMS.init().then(() => {

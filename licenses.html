@@ -98,7 +98,51 @@
 
         window.manageLicense = function (id) {
             console.log('VMS: Managing license', id);
-            VMS.showModal('License Management', `You are viewing details for License ID <strong>#${id}</strong>. <br><br>Full physical inspection tools and digital certificate renewal options would appear in this specialized control panel.`);
+            const licenses = JSON.parse(localStorage.getItem('vms_licenses')) || [];
+            const data = licenses.find(l => l.id == id);
+            if (!data) return;
+
+            const body = `
+                <form id="edit-lic-form" style="text-align:left">
+                    <input type="hidden" id="edit_lic_id" value="${data.id}">
+                    <div class="form-group">
+                        <label>License Number: <strong>${data.license_no}</strong></label>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="edit_lic_type" required>
+                            <option value="Driver" ${data.type === 'Driver' ? 'selected' : ''}>Driver's License</option>
+                            <option value="Conductor" ${data.type === 'Conductor' ? 'selected' : ''}>Conductor's License</option>
+                            <option value="Road Service" ${data.type === 'Road Service' ? 'selected' : ''}>Road Service (Bus)</option>
+                            <option value="Special Hire" ${data.type === 'Special Hire' ? 'selected' : ''}>Special Hire (Taxi)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="edit_lic_status" required>
+                            <option value="Active" ${data.status === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Suspended" ${data.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
+                            <option value="Expired" ${data.status === 'Expired' ? 'selected' : ''}>Expired</option>
+                        </select>
+                    </div>
+                </form>
+            `;
+
+            VMS.showModal('Edit License', body, [
+                { text: 'Cancel', class: 'btn-secondary', onclick: () => VMS.hideModal() },
+                {
+                    text: 'Save Changes', class: '', preventClose: true, onclick: async () => {
+                        const updated = {
+                            id: document.getElementById('edit_lic_id').value,
+                            type: document.getElementById('edit_lic_type').value,
+                            status: document.getElementById('edit_lic_status').value
+                        };
+                        await VMS.editLicense(updated);
+                        VMS.hideModal();
+                        if (typeof renderLicenses === 'function') renderLicenses();
+                    }
+                }
+            ]);
         };
 
         VMS.init().then(() => {

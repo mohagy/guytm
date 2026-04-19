@@ -61,6 +61,11 @@ const VMS = {
         window.location.href = 'login.html';
     },
 
+    toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('active');
+    },
+
     getCurrentUser() {
         return JSON.parse(sessionStorage.getItem('vms_current_user'));
     },
@@ -168,6 +173,27 @@ const VMS = {
         }
 
         sidebar.innerHTML = navHtml;
+
+        // Add Mobile Header to body if it doesn't exist
+        if (!document.querySelector('.mobile-header')) {
+            const mHeader = document.createElement('div');
+            mHeader.className = 'mobile-header';
+            mHeader.innerHTML = `
+                <div style="font-weight:bold; color:var(--accent);">GUYANA VMS</div>
+                <button class="hamburger" onclick="VMS.toggleSidebar()">☰</button>
+            `;
+            document.body.prepend(mHeader);
+        }
+
+        // Auto-wrap tables for responsiveness
+        document.querySelectorAll('table').forEach(table => {
+            if (!table.parentElement.classList.contains('table-responsive')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-responsive';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+        });
     }
 };
 

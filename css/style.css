@@ -41,6 +41,28 @@ body {
     margin-left: 260px;
     flex: 1;
     padding: 2rem;
+    transition: margin 0.3s;
+}
+
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    background-color: var(--sidebar-bg);
+    color: var(--white);
+    padding: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+}
+
+.hamburger {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 1.5rem;
+    padding: 0.5rem;
 }
 
 /* Sidebar Links */
@@ -61,7 +83,8 @@ body {
     transition: all 0.2s;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     background-color: rgba(255, 255, 255, 0.1);
     color: var(--white);
 }
@@ -86,7 +109,9 @@ label {
     margin-bottom: 0.25rem;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #d9e2ec;
@@ -118,10 +143,21 @@ table {
     overflow: hidden;
 }
 
-th, td {
+th,
+td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #f0f4f8;
+    white-space: nowrap;
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
 }
 
 th {
@@ -137,13 +173,51 @@ th {
     font-weight: 600;
 }
 
-.badge-active { background: #d1fae5; color: #065f46; }
-.badge-expired { background: #fee2e2; color: #991b1b; }
-.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
-    .sidebar { width: 100%; height: auto; position: relative; }
-    .main-content { margin-left: 0; }
-    body { flex-direction: column; }
+    .sidebar {
+        left: -260px;
+        transition: left 0.3s;
+        z-index: 1002;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .mobile-header {
+        display: flex;
+    }
+
+    body {
+        flex-direction: column;
+    }
+
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    button {
+        width: 100%;
+    }
 }
